@@ -1,0 +1,893 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      }
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "NebulaDashProxyDashfunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/Nebula-Backend-dev-Nebula-Proxy-function"
+      }
+    },
+    "UserAuthFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/Nebula-Backend-dev-UserAuthFunction"
+      }
+    },
+    "ProjectFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/Nebula-Backend-dev-ProjectFunction"
+      }
+    },
+    "TerraformPlanFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/Nebula-Backend-dev-TerraformPlanFunction"
+      }
+    },
+    "TerraformApplyFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/Nebula-Backend-dev-TerraformApplyFunction"
+      }
+    },
+    "TerraformDestroyFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/Nebula-Backend-dev-TerraformDestroyFunction"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "Nebula-Backend",
+                  "dev",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup",
+                    "logs:TagResource"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Nebula-Backend-dev*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Nebula-Backend-dev*:*:*"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "Nebula-Backend",
+              "dev",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        }
+      }
+    },
+    "NebulaDashProxyDashfunctionLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/Nebula-Backend/dev/1707469291696-2024-02-09T09:01:31.696Z/Nebula-Backend.zip"
+        },
+        "Handler": "index.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "Nebula-Backend-dev-Nebula-Proxy-function",
+        "MemorySize": 128,
+        "Timeout": 10,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "NebulaDashProxyDashfunctionLogGroup"
+      ]
+    },
+    "UserAuthFunctionLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/Nebula-Backend/dev/1707469291696-2024-02-09T09:01:31.696Z/Nebula-Backend.zip"
+        },
+        "Handler": "user.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "Nebula-Backend-dev-UserAuthFunction",
+        "MemorySize": 128,
+        "Timeout": 10,
+        "Description": "Handler all onboarding functionality",
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "UserAuthFunctionLogGroup"
+      ]
+    },
+    "ProjectFunctionLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/Nebula-Backend/dev/1707469291696-2024-02-09T09:01:31.696Z/Nebula-Backend.zip"
+        },
+        "Handler": "project.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "Nebula-Backend-dev-ProjectFunction",
+        "MemorySize": 128,
+        "Timeout": 10,
+        "Description": "Handler all project functionality",
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "ProjectFunctionLogGroup"
+      ]
+    },
+    "TerraformPlanFunctionLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/Nebula-Backend/dev/1707469291696-2024-02-09T09:01:31.696Z/Nebula-Backend.zip"
+        },
+        "Handler": "/Nebula-Backend/Lambdas/plan/index.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "Nebula-Backend-dev-TerraformPlanFunction",
+        "MemorySize": 128,
+        "Timeout": 10,
+        "Description": "Handler all Terraform Plan functionality",
+        "Tags": [
+          {
+            "Key": "Owner",
+            "Value": "Disraptor"
+          },
+          {
+            "Key": "Project",
+            "Value": "Nebula"
+          },
+          {
+            "Key": "Automation",
+            "Value": "Terraform"
+          }
+        ],
+        "Environment": {
+          "Variables": {
+            "TERRAFORM_LAYER_ARN": "arn:aws:lambda:af-south-1:143671530412:layer:Terraform:1"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Layers": [
+          "arn:aws:lambda:af-south-1:143671530412:layer:Terraform:1"
+        ]
+      },
+      "DependsOn": [
+        "TerraformPlanFunctionLogGroup"
+      ]
+    },
+    "TerraformApplyFunctionLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/Nebula-Backend/dev/1707469291696-2024-02-09T09:01:31.696Z/Nebula-Backend.zip"
+        },
+        "Handler": "/Nebula-Backend/Lambdas/apply/index.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "Nebula-Backend-dev-TerraformApplyFunction",
+        "MemorySize": 128,
+        "Timeout": 10,
+        "Description": "Handler all Terraform Apply functionality",
+        "Tags": [
+          {
+            "Key": "Owner",
+            "Value": "Disraptor"
+          },
+          {
+            "Key": "Project",
+            "Value": "Nebula"
+          },
+          {
+            "Key": "Automation",
+            "Value": "Terraform"
+          }
+        ],
+        "Environment": {
+          "Variables": {
+            "TERRAFORM_LAYER_ARN": "arn:aws:lambda:af-south-1:143671530412:layer:Terraform:1"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Layers": [
+          "arn:aws:lambda:af-south-1:143671530412:layer:Terraform:1"
+        ]
+      },
+      "DependsOn": [
+        "TerraformApplyFunctionLogGroup"
+      ]
+    },
+    "TerraformDestroyFunctionLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/Nebula-Backend/dev/1707469291696-2024-02-09T09:01:31.696Z/Nebula-Backend.zip"
+        },
+        "Handler": "/Nebula-Backend/Lambdas/destroy/index.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "Nebula-Backend-dev-TerraformDestroyFunction",
+        "MemorySize": 128,
+        "Timeout": 10,
+        "Description": "Handler all Terraform Destroy functionality",
+        "Tags": [
+          {
+            "Key": "Owner",
+            "Value": "Disraptor"
+          },
+          {
+            "Key": "Project",
+            "Value": "Nebula"
+          },
+          {
+            "Key": "Automation",
+            "Value": "Terraform"
+          }
+        ],
+        "Environment": {
+          "Variables": {
+            "TERRAFORM_LAYER_ARN": "arn:aws:lambda:af-south-1:143671530412:layer:Terraform:1"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Layers": [
+          "arn:aws:lambda:af-south-1:143671530412:layer:Terraform:1"
+        ]
+      },
+      "DependsOn": [
+        "TerraformDestroyFunctionLogGroup"
+      ]
+    },
+    "NebulaDashProxyDashfunctionLambdaVersionwCazrcdKh61E3utbbp5FXSdCF3LaIy49zflsXv4ZFk": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "NebulaDashProxyDashfunctionLambdaFunction"
+        },
+        "CodeSha256": "Se9FHaU3tKNcSxFauv+Qg0xnOU4U4/Sv9BJ22rsa/CI="
+      }
+    },
+    "UserAuthFunctionLambdaVersionjABXNwIPIo8nrExnezQkNJPHgFBmdl2bwjLeuWU": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "UserAuthFunctionLambdaFunction"
+        },
+        "CodeSha256": "Se9FHaU3tKNcSxFauv+Qg0xnOU4U4/Sv9BJ22rsa/CI=",
+        "Description": "Handler all onboarding functionality"
+      }
+    },
+    "ProjectFunctionLambdaVersionZnwQnK1L6pGEHfYau1JcCwPoMAo4daE1lA8RuYgbQc": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "ProjectFunctionLambdaFunction"
+        },
+        "CodeSha256": "Se9FHaU3tKNcSxFauv+Qg0xnOU4U4/Sv9BJ22rsa/CI=",
+        "Description": "Handler all project functionality"
+      }
+    },
+    "TerraformPlanFunctionLambdaVersionlaqrAP3q9xoxggDrxFU0qrTaJUH3ZrL7Zg3bgyyVQ6A": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "TerraformPlanFunctionLambdaFunction"
+        },
+        "CodeSha256": "Se9FHaU3tKNcSxFauv+Qg0xnOU4U4/Sv9BJ22rsa/CI=",
+        "Description": "Handler all Terraform Plan functionality"
+      }
+    },
+    "TerraformApplyFunctionLambdaVersionFlW2jhuZHxzyqjrpaoR2auKn9vzctRQKor6HIWjMvs": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "TerraformApplyFunctionLambdaFunction"
+        },
+        "CodeSha256": "Se9FHaU3tKNcSxFauv+Qg0xnOU4U4/Sv9BJ22rsa/CI=",
+        "Description": "Handler all Terraform Apply functionality"
+      }
+    },
+    "TerraformDestroyFunctionLambdaVersionKwzihB4ZgTDnYPsPfaM0RER55m17f14obNJm65rAp8": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "TerraformDestroyFunctionLambdaFunction"
+        },
+        "CodeSha256": "Se9FHaU3tKNcSxFauv+Qg0xnOU4U4/Sv9BJ22rsa/CI=",
+        "Description": "Handler all Terraform Destroy functionality"
+      }
+    },
+    "HttpApi": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": "dev-Nebula-Backend",
+        "ProtocolType": "HTTP"
+      }
+    },
+    "HttpApiStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "StageName": "$default",
+        "AutoDeploy": true,
+        "DefaultRouteSettings": {
+          "DetailedMetricsEnabled": false
+        }
+      }
+    },
+    "NebulaDashProxyDashfunctionLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "NebulaDashProxyDashfunctionLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationNebulaDashProxyDashfunction": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "NebulaDashProxyDashfunctionLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRouteDefault": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "$default",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationNebulaDashProxyDashfunction"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationNebulaDashProxyDashfunction"
+    },
+    "TerraformPlanFunctionLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "TerraformPlanFunctionLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationTerraformPlanFunction": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "TerraformPlanFunctionLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRoutePostTerraformPlan": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "POST /terraform/plan",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationTerraformPlanFunction"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationTerraformPlanFunction"
+    },
+    "TerraformApplyFunctionLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "TerraformApplyFunctionLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationTerraformApplyFunction": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "TerraformApplyFunctionLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRoutePostTerraformApply": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "POST /terraform/apply",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationTerraformApplyFunction"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationTerraformApplyFunction"
+    },
+    "TerraformDestroyFunctionLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "TerraformDestroyFunctionLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationTerraformDestroyFunction": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "TerraformDestroyFunctionLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRoutePostTerraformDestroy": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "POST /terraform/destroy",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationTerraformDestroyFunction"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationTerraformDestroyFunction"
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      },
+      "Export": {
+        "Name": "sls-Nebula-Backend-dev-ServerlessDeploymentBucketName"
+      }
+    },
+    "NebulaDashProxyDashfunctionLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "NebulaDashProxyDashfunctionLambdaVersionwCazrcdKh61E3utbbp5FXSdCF3LaIy49zflsXv4ZFk"
+      },
+      "Export": {
+        "Name": "sls-Nebula-Backend-dev-NebulaDashProxyDashfunctionLambdaFunctionQualifiedArn"
+      }
+    },
+    "UserAuthFunctionLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "UserAuthFunctionLambdaVersionjABXNwIPIo8nrExnezQkNJPHgFBmdl2bwjLeuWU"
+      },
+      "Export": {
+        "Name": "sls-Nebula-Backend-dev-UserAuthFunctionLambdaFunctionQualifiedArn"
+      }
+    },
+    "ProjectFunctionLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "ProjectFunctionLambdaVersionZnwQnK1L6pGEHfYau1JcCwPoMAo4daE1lA8RuYgbQc"
+      },
+      "Export": {
+        "Name": "sls-Nebula-Backend-dev-ProjectFunctionLambdaFunctionQualifiedArn"
+      }
+    },
+    "TerraformPlanFunctionLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "TerraformPlanFunctionLambdaVersionlaqrAP3q9xoxggDrxFU0qrTaJUH3ZrL7Zg3bgyyVQ6A"
+      },
+      "Export": {
+        "Name": "sls-Nebula-Backend-dev-TerraformPlanFunctionLambdaFunctionQualifiedArn"
+      }
+    },
+    "TerraformApplyFunctionLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "TerraformApplyFunctionLambdaVersionFlW2jhuZHxzyqjrpaoR2auKn9vzctRQKor6HIWjMvs"
+      },
+      "Export": {
+        "Name": "sls-Nebula-Backend-dev-TerraformApplyFunctionLambdaFunctionQualifiedArn"
+      }
+    },
+    "TerraformDestroyFunctionLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "TerraformDestroyFunctionLambdaVersionKwzihB4ZgTDnYPsPfaM0RER55m17f14obNJm65rAp8"
+      },
+      "Export": {
+        "Name": "sls-Nebula-Backend-dev-TerraformDestroyFunctionLambdaFunctionQualifiedArn"
+      }
+    },
+    "HttpApiId": {
+      "Description": "Id of the HTTP API",
+      "Value": {
+        "Ref": "HttpApi"
+      },
+      "Export": {
+        "Name": "sls-Nebula-Backend-dev-HttpApiId"
+      }
+    },
+    "HttpApiUrl": {
+      "Description": "URL of the HTTP API",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "HttpApi"
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            }
+          ]
+        ]
+      },
+      "Export": {
+        "Name": "sls-Nebula-Backend-dev-HttpApiUrl"
+      }
+    }
+  }
+}

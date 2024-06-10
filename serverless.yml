@@ -1,0 +1,33 @@
+service: Nebula-Backend
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: af-south-1
+  memorySize: 128
+  timeout: 10
+
+functions:
+  Nebula-Proxy-function:
+    handler: index.handler
+    events:
+    - httpApi: '*'
+
+  UserAuthFunction:
+    handler: user.handler
+    description: 'Handler all onboarding functionality'
+    # events:
+    # - httpApi: 'POST /auth/signup'
+    # - httpApi: 'POST /auth/login'
+    # - httpApi: '*'
+
+  ProjectFunction:
+    handler: project.handler
+    description: 'Handler all project functionality'
+    # events:
+    # - httpApi: 'POST /project/create'
+    # - httpApi: 'PUT /project/update'
+    # - httpApi: 'GET /project/getproject'
+    # - httpApi: 'GET /project/getallprojects'
+    # - httpApi: 'DELETE /project/delete'

@@ -1,0 +1,23 @@
+FROM node:14-alpine
+
+# Set the geographic location and time to South Africa
+RUN apk add --no-cache tzdata \
+    && ln -sf /usr/share/zoneinfo/Africa/Johannesburg /etc/localtime \
+    && echo "Africa/Johannesburg" > /etc/timezone
+
+# Create user nebula-user with sudo access and group nebula
+RUN addgroup nebula \
+    && adduser -D -G nebula nebula-user \
+    && echo 'nebula-user ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Install required packages
+RUN apk add --no-cache curl git python3 py3-pip
+
+# Set working directory
+WORKDIR /Nebula-Backend/
+
+# Copy project files
+COPY . .
+
+# Start the project using Node.js
+CMD ["node", "index.js"]

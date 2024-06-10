@@ -1,0 +1,64 @@
+name: Run Terrgrunt file for Nebula Backend EC2 Instance
+
+on:
+  push:
+    branches:
+    - 'main'
+    paths:
+    - 'Infrastructure/AMI/Nebula-Image/v.1.0.0/resource/ec2/*'
+env:
+  working-directory: './Infrastructure/AMI/Nebula-Image/v.1.0.0/resource/ec2/'
+jobs:
+  build-image:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: af-south-1
+
+    - name: Install Terraform
+      uses: little-core-labs/install-terraform@v2.0.0
+      with:
+        version: latest
+
+    - name: Terraform Format
+      id: format
+      run: terraform fmt
+      working-directory: ${{ env.working-directory }}
+      env:
+        TF_INPUT: true
+
+    - name: Terraform Init
+      id: init
+      run: terraform init
+      working-directory: ${{ env.working-directory }}
+      env:
+        TF_INPUT: true
+
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate
+      working-directory: ${{ env.working-directory }}
+      env:
+        TF_INPUT: true
+
+    - name: Terraform plan
+      id: plan
+      run: terraform plan
+      working-directory: ${{ env.working-directory }}
+      env:
+        TF_INPUT: true
+
+    - name: Terraform apply
+      id: apply
+      run: terraform apply -auto-approve
+      working-directory: ${{ env.working-directory }}
+      env:
+        TF_INPUT: true

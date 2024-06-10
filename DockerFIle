@@ -1,0 +1,60 @@
+FROM ubuntu:latest
+
+# Set the geographic location and time to South Africa
+RUN ln -sf /usr/share/zoneinfo/Africa/Johannesburg /etc/localtime
+RUN echo "Africa/Johannesburg" > /etc/timezone
+
+# Create user nebula-user with sudo access and group nebula
+RUN useradd -m -s /bin/bash -G sudo nebula-user \
+    && echo 'nebula-user ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
+    && groupadd nebula \
+    && usermod -aG nebula nebula-user
+
+
+# Install the latest system updates
+RUN apt-get update && apt upgrade -y
+
+# Install required packages
+RUN apt install -y curl gnupg software-properties-common wget
+
+# Install Python and pip and git 
+RUN apt-get install -y git python3 python3-pip
+
+# Install Node.js and npm
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+RUN apt install -y nodejs
+
+# Install AWS SDK for JavaScript
+RUN npm install aws-sdk
+
+# Install AWS CLI
+RUN apt-get install -y awscli
+
+# Install Terraform
+RUN wget -O- https://apt.releases.hashicorp.com/gpg | \
+    gpg --dearmor | \
+    tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+RUN gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
+    
+RUN echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+    https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+    tee /etc/apt/sources.list.d/hashicorp.list
+
+RUN echo "deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+
+RUN apt update 
+
+RUN apt-get install -y terraform
+
+# Verify Terraform installation
+RUN terraform --version
+
+WORKDIR /Nebula-Backend/
+
+# Install pm2 process manager
+RUN npm install pm2 -g
+
+# Start the project using pm2
+CMD ["pm2-runtime", "index.js"]
+

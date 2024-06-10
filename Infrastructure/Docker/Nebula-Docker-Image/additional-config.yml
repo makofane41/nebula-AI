@@ -1,0 +1,22 @@
+install:
+- name: aws-cli
+  command: |
+    apk --update --no-cache add python3 py3-pip \
+    && pip3 install --upgrade pip \
+    && pip3 install awscli
+
+- name: nodejs-npm
+  command: |
+    apk --update --no-cache add nodejs npm
+
+- name: terraform
+  version: 5.0.0 # Adjust the version as needed
+  command: |
+    wget -O terraform.zip "https://releases.hashicorp.com/terraform/{{ .Version }}/terraform_{{ .Version }}_linux_amd64.zip" \
+    && unzip terraform.zip -d /usr/bin \
+    && rm terraform.zip
+
+- name: npm-install
+  command: npm install aws-sdk
+
+

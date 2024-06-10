@@ -1,0 +1,51 @@
+name: Run packer for building Nebula Server
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - Infrastructure/AMI/Nebula-Image/v.1.0.0/*
+
+jobs:
+  build-image:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Packer
+      uses: hashicorp/setup-packer@main
+      id: setup
+      with:
+        version: "latest"
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: af-south-1
+
+    - name: Packer Init
+      id: init
+      run: packer init .
+      working-directory: ./Infrastructure/AMI/Nebula-Image/v.1.0.0/
+
+    - name: Packer Format
+      id: format
+      run: packer fmt .
+      working-directory: ./Infrastructure/AMI/Nebula-Image/v.1.0.0/
+
+    - name: Packer Validate
+      id: validate
+      run: packer validate  .
+      working-directory: ./Infrastructure/AMI/Nebula-Image/v.1.0.0/
+
+    - name: Packer Build - Branches
+      id: build
+      run: packer build -var-file="variables.pkrvars.hcl" .
+      working-directory: ./Infrastructure/AMI/Nebula-Image/v.1.0.0/
+      env:
+        PACKER_LOG: 1
